@@ -1,4 +1,5 @@
 import struct
+from PIL import Image
 
 
 class BMPImage:
@@ -44,7 +45,7 @@ class BMPImage:
     def display_header(self):
         print(f"Header (14 bytes):")
         print(f'Signature: {self.type.decode("utf-8")}')
-        print(f"File Size: {self.size}")
+        print(f"File Size (bytes): {self.size}")
         print(f"Reserved:")
         print(f"- reserved 1: {self.reserved1}")
         print(f"- reserved 2: {self.reserved2}")
@@ -62,10 +63,14 @@ class BMPImage:
         print(f"Colors Used: {self.clr_used}")
         print(f"Important Colors: {self.clr_important}")
 
+    def display_image(self):
+        img = Image.open(self.filepath)
+        img.show()
 
 def main():
     bmp = BMPImage("test.bmp")
     bmp.display_header()
+    bmp.display_image()
 
 
 if __name__ == "__main__":
