@@ -72,13 +72,20 @@ class BMPImage:
         img = Image.open(self.filepath).convert('L')  # Convert image to grayscale
         f = np.fft.fft2(img)  # Perform 2D FFT
         fshift = np.fft.fftshift(f)  # Shift the zero-frequency component to the center of the spectrum
-        magnitude_spectrum = 20*np.log(np.abs(fshift))  # Calculate the magnitude spectrum
+        magnitude_spectrum = 20 * np.log(np.abs(fshift))  # Calculate the magnitude spectrum
+        phase_spectrum = np.angle(fshift)  # Calculate the phase spectrum
 
         plt.figure(figsize=(14, 7))
         plt.subplot(121), plt.imshow(img, cmap='gray')
         plt.title('Input Image'), plt.xticks([]), plt.yticks([])
         plt.subplot(122), plt.imshow(magnitude_spectrum, cmap='gray')
         plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+        
+        # Add phase plot
+        plt.figure(figsize=(7, 7))
+        plt.imshow(phase_spectrum, cmap='gray')
+        plt.title('Phase Spectrum'), plt.xticks([]), plt.yticks([])
+        
         plt.show()
     
     def display_color_table(self):
