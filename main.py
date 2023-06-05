@@ -1,71 +1,72 @@
 import struct
-import os
-import matplotlib.pyplot as plt
-from collections import Counter
+
 
 class BMPImage:
     def __init__(self, filepath):
         self.filepath = filepath
-        self.read_header()
+        self._read_headers()
+        self._read_dib_header()
+        self._read_color_table()
 
-    def read_header(self):
-        with open(self.filepath, 'rb') as f:
+    def _read_headers(self):
+        with open(self.filepath, "rb") as f:
             self.header = f.read(14)
+            (
+                self.type,
+                self.size,
+                self.reserved1,
+                self.reserved2,
+                self.offset,
+            ) = struct.unpack("<2sIHHI", self.header)
 
-            self.type, self.size, self.reserved1, self.reserved2, self.offset = struct.unpack('<2sIHHI', self.header)
+    def _read_dib_header(self):
+        with open(self.filepath, "rb") as f:
+            f.seek(14)  # Move to DIB header
+            self.dib_header_size = struct.unpack("<I", f.read(4))[0]
+            (
+                self.width,
+                self.height,
+                self.planes,
+                self.bit_count,
+                self.compression,
+                self.image_size,
+                self.x_ppm,
+                self.y_ppm,
+                self.clr_used,
+                self.clr_important,
+            ) = struct.unpack("<iiHHIIiiII", f.read(self.dib_header_size - 4))
 
-            # Read profile and color table information
-            self.profile = f.read(self.offset - 14)
+    def _read_color_table(self):
+        with open(self.filepath, "rb") as f:
+            f.seek(self.offset)  # Move to color table
             self.color_table = f.read()
 
     def display_header(self):
-        print(f'Type: {self.type.decode("utf-8")}')
-        print(f'Size: {self.size}')
-        print(f'Reserved1: {self.reserved1}')
-        print(f'Reserved2: {self.reserved2}')
-        print(f'Offset: {self.offset}')
+        print(f"Header (14 bytes):")
+        print(f'Signature: {self.type.decode("utf-8")}')
+        print(f"File Size: {self.size}")
+        print(f"Reserved:")
+        print(f"- reserved 1: {self.reserved1}")
+        print(f"- reserved 2: {self.reserved2}")
+        print(f"Data Offset: {self.offset}")
+        print(f"\n\nInfo Header (40 bytes):")
+        print(f"Size: {self.dib_header_size}")
+        print(f"Width: {self.width}")
+        print(f"Height: {self.height}")
+        print(f"Planes: {self.planes}")
+        print(f"Bit Count: {self.bit_count}")
+        print(f"Compression: {self.compression}")
+        print(f"Image Size: {self.image_size}")
+        print(f"X Pixels Per Meter: {self.x_ppm}")
+        print(f"Y Pixels Per Meter: {self.y_ppm}")
+        print(f"Colors Used: {self.clr_used}")
+        print(f"Important Colors: {self.clr_important}")
 
-        print('\nProfile:')
-        for byte in self.profile:
-            print(f'{byte:02X}', end=' ')
 
-        print('\nColor Table:')
-        for byte in self.color_table:
-            print(f'{byte:02X}', end=' ')
-
-    def plot_header(self):
-        profile_counts = Counter(self.profile)
-        color_table_counts = Counter(self.color_table)
-
-        x_profile = profile_counts.keys()
-        y_profile = profile_counts.values()
-
-        x_color_table = color_table_counts.keys()
-        y_color_table = color_table_counts.values()
-
-        plt.figure(figsize=(12, 6))
-        plt.bar(x_profile, y_profile)
-        plt.xlabel('Byte Value')
-        plt.ylabel('Frequency')
-        plt.title('Profile')
-        plt.show()
-
-        plt.figure(figsize=(12, 6))
-        plt.bar(x_color_table, y_color_table)
-        plt.xlabel('Byte Value')
-        plt.ylabel('Frequency')
-        plt.title('Color Table')
-        plt.show()
-
-    def anonymize_header(self):
-        self.reserved1 = 0
-        self.reserved2 = 0
-        with open(self.filepath, 'r+b') as f:
-            f.seek(6)
-            f.write(struct.pack('HH', self.reserved1, self.reserved2))
-
-if __name__ == '__main__':
-    bmp = BMPImage('test.bmp')
+def main():
+    bmp = BMPImage("test.bmp")
     bmp.display_header()
-    bmp.plot_header()
-    bmp.anonymize_header()
+
+
+if __name__ == "__main__":
+    main()
